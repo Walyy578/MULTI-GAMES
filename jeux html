@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attrape les Étoiles</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #0a043c;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden;
+        }
+        
+        h1 {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+        }
+        
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            background: linear-gradient(to bottom, #0a043c, #1e1152);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+            border: 2px solid #ffcc00;
+        }
+        
+        #score-container {
+            display: flex;
+            justify-content: space-between;
+            width: 800px;
+            margin-bottom: 15px;
+            font-size: 20px;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        #player {
+            position: absolute;
+            bottom: 20px;
+            width: 100px;
+            height: 40px;
+            background-color: #ffcc00;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.8);
+            transition: transform 0.1s;
+        }
+        
+        .star {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #ffffff;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+        
+        #controls {
+            margin-top: 20px;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            width: 800px;
+        }
+        
+        button {
+            background-color: #ffcc00;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #0a043c;
+            transition: all 0.3s;
+            margin: 0 10px;
+        }
+        
+        button:hover {
+            background-color: #ffdd44;
+            transform: scale(1.05);
+        }
+        
+        #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            display: none;
+        }
+        
+        #final-score {
+            font-size: 28px;
+            margin-bottom: 30px;
+            color: #ffcc00;
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            text-align: center;
+            line-height: 1.6;
+            color: #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Attrape les Étoiles</h1>
+    
+    <div id="score-container">
+        <div>Score: <span id="score">0</span></div>
+        <div>Vies: <span id="lives">3</span></div>
+        <div>Niveau: <span id="level">1</span></div>
+    </div>
+    
+    <div id="game-container">
+        <div id="player"></div>
+        <div id="game-over">
+            <h2>Game Over</h2>
+            <div id="final-score">Votre score: 0</div>
+            <button id="restart-button">Rejouer</button>
+        </div>
+    </div>
+    
+    <div id="controls">
+        <button id="start-button">Commencer</button>
+        <button id="pause-button">Pause</button>
+    </div>
+    
+    <div class="instructions">
+        <p>Utilisez les flèches gauche et droite du clavier pour déplacer le panier et attraper les étoiles qui tombent.</p>
+        <p>Attrapez 10 étoiles pour passer au niveau suivant où les étoiles tomberont plus vite!</p>
+    </div>
+
+    <script>
+        // Variables du jeu
+        const gameContainer = document.getElementById('game-container');
+        const player = document.getElementById('player');
+        const scoreElement = document.getElementById('score');
+        const livesElement = document.getElementById('lives');
+        const levelElement = document.getElementById('level');
+        const startButton = document.getElementById('start-button');
+        const pauseButton = document.getElementById('pause-button');
+        const restartButton = document.getElementById('restart-button');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScoreElement = document.getElementById('final-score');
+        
+        let gameRunning = false;
+        let gamePaused = false;
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let playerX = gameContainer.offsetWidth / 2 - player.offsetWidth / 2;
+        let stars = [];
+        let starInterval;
+        let gameSpeed = 2;
+        let starsToNextLevel = 10;
+        let keys = {};
+        
+        // Initialisation du jeu
+        function initGame() {
+            player.style.left = playerX + 'px';
+            score = 0;
+            lives = 3;
+            level = 1;
+            starsToNextLevel = 10;
+            gameSpeed = 2;
+            updateUI();
+            
+            // Supprimer toutes les étoiles existantes
+            stars.forEach(star => {
+                if (star.element && star.element.parentNode) {
+                    star.element.parentNode.removeChild(star.element);
+                }
+            });
+            stars = [];
+        }
+        
+        // Mise à jour de l'interface utilisateur
+        function updateUI() {
+            scoreElement.textContent = score;
+            livesElement.textContent = lives;
+            levelElement.textContent = level;
+        }
+        
+        // Déplacement du joueur
+        function movePlayer() {
+            if (keys['ArrowLeft'] && playerX > 0) {
+                playerX -= 7;
+            }
+            if (keys['ArrowRight'] && playerX < gameContainer.offsetWidth - player.offsetWidth) {
+                playerX += 7;
+            }
+            player.style.left = playerX + 'px';
+        }
+        
+        // Création d'une étoile
+        function createStar() {
+            const star = document.createElement('div');
+            star.className = 'star';
+            
+            const x = Math.random() * (gameContainer.offsetWidth - 30);
+            star.style.left = x + 'px';
+            star.style.top = '-30px';
+            
+            gameContainer.appendChild(star);
+            
+            stars.push({
+                element: star,
+                x: x,
+                y: 0,
+                speed: gameSpeed + Math.random() * 1.5
+            });
+        }
+        
+        // Mouvement des étoiles
+        function moveStars() {
+            for (let i = stars.length - 1; i >= 0; i--) {
+                const star = stars[i];
+                star.y += star.speed;
+                star.element.style.top = star.y + 'px';
+                
+                // Vérifier si l'étoile est attrapée
+                if (star.y + 30 >= gameContainer.offsetHeight - 60 && 
+                    star.y <= gameContainer.offsetHeight - 20 &&
+                    star.x + 30 >= playerX && 
+                    star.x <= playerX + player.offsetWidth) {
+                    
+                    // Étoile attrapée
+                    gameContainer.removeChild(star.element);
+                    stars.splice(i, 1);
+                    score++;
+                    starsToNextLevel--;
+                    
+                    // Vérifier si le niveau doit augmenter
+                    if (starsToNextLevel <= 0) {
+                        levelUp();
+                    }
+                    
+                    updateUI();
+                    continue;
+                }
+                
+                // Vérifier si l'étoile est manquée
+                if (star.y > gameContainer.offsetHeight) {
+                    gameContainer.removeChild(star.element);
+                    stars.splice(i, 1);
+                    lives--;
+                    updateUI();
+                    
+                    // Vérifier si la partie est terminée
+                    if (lives <= 0) {
+                        gameOver();
+                    }
+                }
+            }
+        }
+        
+        // Augmentation du niveau
+        function levelUp() {
+            level++;
+            gameSpeed += 0.5;
+            starsToNextLevel = 10;
+            
+            // Effet visuel pour le changement de niveau
+            gameContainer.style.boxShadow = '0 0 30px rgba(255, 204, 0, 0.8)';
+            setTimeout(() => {
+                gameContainer.style.boxShadow = '0 0 20px rgba(255, 204, 0, 0.3)';
+            }, 500);
+        }
+        
+        // Game over
+        function gameOver() {
+            gameRunning = false;
+            clearInterval(starInterval);
+            finalScoreElement.textContent = `Votre score: ${score}`;
+            gameOverScreen.style.display = 'flex';
+        }
+        
+        // Boucle de jeu
+        function gameLoop() {
+            if (!gameRunning || gamePaused) return;
+            
+            movePlayer();
+            moveStars();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Événements clavier
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        // Boutons de contrôle
+        startButton.addEventListener('click', () => {
+            if (!gameRunning) {
+                initGame();
+                gameRunning = true;
+                gamePaused = false;
+                gameOverScreen.style.display = 'none';
+                starInterval = setInterval(createStar, 1000);
+                gameLoop();
+            }
+        });
+        
+        pauseButton.addEventListener('click', () => {
+            if (gameRunning) {
+                gamePaused = !gamePaused;
+                pauseButton.textContent = gamePaused ? 'Reprendre' : 'Pause';
+                
+                if (!gamePaused) {
+                    gameLoop();
+                }
+            }
+        });
+        
+        restartButton.addEventListener('click', () => {
+            initGame();
+            gameRunning = true;
+            gamePaused = false;
+            gameOverScreen.style.display = 'none';
+            starInterval = setInterval(createStar, 1000);
+            gameLoop();
+        });
+        
+        // Initialiser le jeu au chargement
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>
