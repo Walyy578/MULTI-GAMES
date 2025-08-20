@@ -3,347 +3,1132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attrape les Étoiles</title>
+    <title>Jeu de Casse-Briques Premium</title>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #0a043c;
-            color: white;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 20px;
             overflow: hidden;
+            touch-action: none;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            transform: rotate(30deg);
+            pointer-events: none;
         }
         
         h1 {
-            color: #ffcc00;
-            text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            color: #FFC107;
+            text-shadow: 0 0 10px rgba(255, 193, 7, 0.7);
+            letter-spacing: 2px;
         }
         
-        #game-container {
-            position: relative;
-            width: 800px;
-            height: 500px;
-            background: linear-gradient(to bottom, #0a043c, #1e1152);
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
-            border: 2px solid #ffcc00;
-        }
-        
-        #score-container {
+        .game-info {
             display: flex;
             justify-content: space-between;
-            width: 800px;
-            margin-bottom: 15px;
-            font-size: 20px;
-            background-color: rgba(0, 0, 0, 0.3);
-            padding: 10px;
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 0 10px;
+            font-size: 1.2rem;
         }
         
-        #player {
-            position: absolute;
-            bottom: 20px;
-            width: 100px;
-            height: 40px;
-            background-color: #ffcc00;
-            border-radius: 10px 10px 0 0;
-            box-shadow: 0 0 15px rgba(255, 204, 0, 0.8);
-            transition: transform 0.1s;
+        #credits, #lives {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
-        .star {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background-color: #ffffff;
-            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        #credits {
+            color: #4CAF50;
         }
         
-        #controls {
-            margin-top: 20px;
-            text-align: center;
-            background-color: rgba(0, 0, 0, 0.3);
-            padding: 15px;
+        #lives {
+            color: #F44336;
+            display: none; /* Caché car une seule vie */
+        }
+        
+        .credits-icon {
+            font-size: 1.4rem;
+        }
+        
+        canvas {
+            background: #111;
             border-radius: 10px;
-            width: 800px;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            border: 2px solid #333;
+            touch-action: none;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
         
         button {
-            background-color: #ffcc00;
-            border: none;
             padding: 12px 25px;
-            border-radius: 5px;
-            font-size: 18px;
-            cursor: pointer;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
             font-weight: bold;
-            color: #0a043c;
-            transition: all 0.3s;
-            margin: 0 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
         
         button:hover {
-            background-color: #ffdd44;
-            transform: scale(1.05);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
         }
         
-        #game-over {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            display: none;
+        button:active {
+            transform: translateY(1px);
         }
         
-        #final-score {
-            font-size: 28px;
-            margin-bottom: 30px;
-            color: #ffcc00;
+        #start-btn {
+            background: linear-gradient(to right, #4CAF50, #8BC34A);
+            color: white;
+        }
+        
+        #pause-btn {
+            background: linear-gradient(to right, #FF9800, #FFC107);
+            color: white;
+        }
+        
+        #reset-btn {
+            background: linear-gradient(to right, #F44336, #FF5722);
+            color: white;
+        }
+        
+        #payment-btn {
+            background: linear-gradient(to right, #2196F3, #03A9F4);
+            color: white;
         }
         
         .instructions {
             margin-top: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: left;
+        }
+        
+        .instructions h2 {
+            color: #03A9F4;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .instructions ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            position: relative;
+        }
+        
+        .instructions li::before {
+            content: '•';
+            color: #FFC107;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+        
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 15px;
             text-align: center;
-            line-height: 1.6;
-            color: #cccccc;
+            display: none;
+            box-shadow: 0 0 30px rgba(255, 193, 7, 0.5);
+            border: 2px solid #FFC107;
+            width: 80%;
+            max-width: 400px;
+            z-index: 100;
+        }
+        
+        #game-over h2 {
+            color: #F44336;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        #final-credits {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #4CAF50;
+        }
+        
+        #restart-btn {
+            background: linear-gradient(to right, #2196F3, #03A9F4);
+            color: white;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+        }
+        
+        .touch-controls {
+            display: none;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 0 20px;
+        }
+        
+        .touch-btn {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        
+        /* Amélioration des flèches de navigation */
+        .arrow-keys {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+            gap: 10px;
+        }
+        
+        .arrow-key {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #FFC107;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Modal de paiement */
+        .payment-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .payment-content {
+            background: #222;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 0 30px rgba(255, 140, 0, 0.5);
+            border: 2px solid #FF8C00;
+            color: white;
+        }
+        
+        .payment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .payment-header h2 {
+            color: #FF8C00;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .payment-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .payment-option {
+            background: #333;
+            border: 2px solid #555;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .payment-option:hover {
+            background: #444;
+            border-color: #FF8C00;
+        }
+        
+        .payment-option.active {
+            background: #FF8C00;
+            border-color: #FF8C00;
+        }
+        
+        .payment-logo {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 8px;
+            object-fit: contain;
+        }
+        
+        .payment-form {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .payment-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background: #333;
+            color: white;
+        }
+        
+        .payment-form button {
+            width: 100%;
+            background: #FF8C00;
+        }
+        
+        .credits-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 140, 0, 0.2);
+            border-radius: 5px;
+        }
+        
+        .insufficient-credits {
+            color: #F44336;
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .game-info {
+                flex-direction: column;
+                gap: 10px;
+                align-items: center;
+            }
+            
+            canvas {
+                width: 100%;
+                height: auto;
+            }
+            
+            .controls {
+                flex-wrap: wrap;
+            }
+            
+            .touch-controls {
+                display: flex;
+            }
+            
+            .payment-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .arrow-keys {
+                flex-wrap: wrap;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .touch-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+            
+            .arrow-key {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Attrape les Étoiles</h1>
-    
-    <div id="score-container">
-        <div>Score: <span id="score">0</span></div>
-        <div>Vies: <span id="lives">3</span></div>
-        <div>Niveau: <span id="level">1</span></div>
-    </div>
-    
-    <div id="game-container">
-        <div id="player"></div>
+    <div class="game-container">
+        <h1>CASSE-BRIQUES PREMIUM</h1>
+        
+        <div class="game-info">
+            <div id="credits">
+                <span class="credits-icon">💰</span> Crédits: <span id="credits-value">0</span>
+                (<span id="total-credits">0</span> total)
+            </div>
+            <div id="lives">Vies: 1</div>
+        </div>
+        
+        <canvas id="gameCanvas" width="760" height="400"></canvas>
+        
+        <div class="touch-controls">
+            <div class="touch-btn" id="left-btn">←</div>
+            <div class="touch-btn" id="right-btn">→</div>
+        </div>
+        
+        <div class="controls">
+            <button id="start-btn">Commencer</button>
+            <button id="pause-btn">Pause</button>
+            <button id="reset-btn">Recommencer</button>
+            <button id="payment-btn">Paiement</button>
+        </div>
+        
+        <div class="instructions">
+            <h2>Comment jouer</h2>
+            <ul>
+                <li>Utilisez les deux flèches ← → du clavier pour déplacer la raquette</li>
+                <li>Faites rebondir la balle pour casser toutes les briques</li>
+                <li>Ne laissez pas la balle toucher le bas de l'écran</li>
+                <li>Chaque brique cassée rapporte 1 crédit</li>
+                <li>Vous avez une seule vie - faites attention!</li>
+                <li>Les crédits gagnés sont ajoutés à votre total et sauvegardés</li>
+            </ul>
+            
+            <div class="arrow-keys">
+                <div class="arrow-key">←</div>
+                <div class="arrow-key">→</div>
+            </div>
+            <p style="text-align: center; margin-top: 5px; color: #FFC107;">Utilisez ces touches pour jouer</p>
+        </div>
+        
         <div id="game-over">
             <h2>Game Over</h2>
-            <div id="final-score">Votre score: 0</div>
-            <button id="restart-button">Rejouer</button>
+            <div id="final-credits">Vos crédits: 0</div>
+            <button id="restart-btn">Rejouer</button>
         </div>
     </div>
-    
-    <div id="controls">
-        <button id="start-button">Commencer</button>
-        <button id="pause-button">Pause</button>
-    </div>
-    
-    <div class="instructions">
-        <p>Utilisez les flèches gauche et droite du clavier pour déplacer le panier et attraper les étoiles qui tombent.</p>
-        <p>Attrapez 10 étoiles pour passer au niveau suivant où les étoiles tomberont plus vite!</p>
+
+    <!-- Modal de paiement -->
+    <div class="payment-modal" id="payment-modal">
+        <div class="payment-content">
+            <div class="payment-header">
+                <h2>Retirer vos crédits</h2>
+                <button class="close-btn" id="close-payment">&times;</button>
+            </div>
+            
+            <div class="credits-info" id="credits-info">
+                Vous avez <span id="current-credits">0</span> crédits. 10000 crédits = 50000 FCFA.
+            </div>
+            
+            <div class="payment-options">
+                <div class="payment-option" data-method="orange">
+                    <img src="https://raw.githubusercontent.com/Walyy578/MULTI-GAMES/main/t%C3%A9l%C3%A9chargement.png" alt="Orange Money" class="payment-logo">
+                    <span>Orange Money</span>
+                </div>
+                <div class="payment-option" data-method="moov">
+                    <img src="https://raw.githubusercontent.com/Walyy578/MULTI-GAMES/main/t%C3%A9l%C3%A9chargement%20(1).png" alt="Moov Money" class="payment-logo">
+                    <span>Moov Money</span>
+                </div>
+                <div class="payment-option" data-method="mtn">
+                    <img src="https://raw.githubusercontent.com/Walyy578/MULTI-GAMES/main/t%C3%A9l%C3%A9chargement%20(1).jpeg" alt="MTN Money" class="payment-logo">
+                    <span>MTN Money</span>
+                </div>
+                <div class="payment-option" data-method="wave">
+                    <img src="https://raw.githubusercontent.com/Walyy578/MULTI-GAMES/main/t%C3%A9l%C3%A9chargement.jpeg" alt="Wave" class="payment-logo">
+                    <span>Wave</span>
+                </div>
+                <div class="payment-option" data-method="paypal">
+                    <img src="https://raw.githubusercontent.com/Walyy578/MULTI-GAMES/main/paypal.png" alt="PayPal" class="payment-logo">
+                    <span>PayPal</span>
+                </div>
+            </div>
+            
+            <div class="payment-form" id="orange-form">
+                <input type="tel" placeholder="Votre numéro Orange Money" id="orange-number">
+                <button id="orange-submit">Retirer</button>
+            </div>
+            
+            <div class="payment-form" id="moov-form">
+                <input type="tel" placeholder="Votre numéro Moov Money" id="moov-number">
+                <button id="moov-submit">Retirer</button>
+            </div>
+            
+            <div class="payment-form" id="mtn-form">
+                <input type="tel" placeholder="Votre numéro MTN Money" id="mtn-number">
+                <button id="mtn-submit">Retirer</button>
+            </div>
+            
+            <div class="payment-form" id="wave-form">
+                <input type="tel" placeholder="Votre numéro Wave" id="wave-number">
+                <button id="wave-submit">Retirer</button>
+            </div>
+            
+            <div class="payment-form" id="paypal-form">
+                <input type="email" placeholder="Votre email PayPal" id="paypal-email">
+                <button id="paypal-submit">Retirer</button>
+            </div>
+            
+            <div class="insufficient-credits" id="insufficient-credits">
+                Crédits insuffisants! Vous avez besoin d'au moins 10000 crédits pour effectuer un retrait.
+            </div>
+        </div>
     </div>
 
     <script>
-        // Variables du jeu
-        const gameContainer = document.getElementById('game-container');
-        const player = document.getElementById('player');
-        const scoreElement = document.getElementById('score');
-        const livesElement = document.getElementById('lives');
-        const levelElement = document.getElementById('level');
-        const startButton = document.getElementById('start-button');
-        const pauseButton = document.getElementById('pause-button');
-        const restartButton = document.getElementById('restart-button');
-        const gameOverScreen = document.getElementById('game-over');
-        const finalScoreElement = document.getElementById('final-score');
+        // Récupération des éléments du DOM
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const creditsElement = document.getElementById('credits-value');
+        const totalCreditsElement = document.getElementById('total-credits');
+        const startBtn = document.getElementById('start-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const paymentBtn = document.getElementById('payment-btn');
+        const gameOverElement = document.getElementById('game-over');
+        const finalCreditsElement = document.getElementById('final-credits');
+        const restartBtn = document.getElementById('restart-btn');
+        const leftBtn = document.getElementById('left-btn');
+        const rightBtn = document.getElementById('right-btn');
         
+        // Éléments du modal de paiement
+        const paymentModal = document.getElementById('payment-modal');
+        const closePaymentBtn = document.getElementById('close-payment');
+        const currentCreditsElement = document.getElementById('current-credits');
+        const creditsInfoElement = document.getElementById('credits-info');
+        const insufficientCreditsElement = document.getElementById('insufficient-credits');
+        const paymentOptions = document.querySelectorAll('.payment-option');
+        const paymentForms = {
+            orange: document.getElementById('orange-form'),
+            moov: document.getElementById('moov-form'),
+            mtn: document.getElementById('mtn-form'),
+            wave: document.getElementById('wave-form'),
+            paypal: document.getElementById('paypal-form')
+        };
+        
+        // Variables du jeu
+        let totalCredits = parseInt(localStorage.getItem('totalCredits')) || 0;
+        let gameCredits = 0;
         let gameRunning = false;
         let gamePaused = false;
-        let score = 0;
-        let lives = 3;
-        let level = 1;
-        let playerX = gameContainer.offsetWidth / 2 - player.offsetWidth / 2;
-        let stars = [];
-        let starInterval;
-        let gameSpeed = 2;
-        let starsToNextLevel = 10;
-        let keys = {};
+        let animationId;
+        let isTouchDevice = 'ontouchstart' in window;
         
-        // Initialisation du jeu
-        function initGame() {
-            player.style.left = playerX + 'px';
-            score = 0;
-            lives = 3;
-            level = 1;
-            starsToNextLevel = 10;
-            gameSpeed = 2;
-            updateUI();
-            
-            // Supprimer toutes les étoiles existantes
-            stars.forEach(star => {
-                if (star.element && star.element.parentNode) {
-                    star.element.parentNode.removeChild(star.element);
-                }
-            });
-            stars = [];
-        }
+        // Propriétés de la raquette
+        const paddle = {
+            width: 100,
+            height: 15,
+            x: canvas.width / 2 - 50,
+            y: canvas.height - 30,
+            speed: 8,
+            dx: 0,
+            color: '#FFC107'
+        };
         
-        // Mise à jour de l'interface utilisateur
-        function updateUI() {
-            scoreElement.textContent = score;
-            livesElement.textContent = lives;
-            levelElement.textContent = level;
-        }
+        // Propriétés de la balle
+        const ball = {
+            radius: 8,
+            x: canvas.width / 2,
+            y: paddle.y - 8,
+            speed: 5,
+            dx: 4 * (Math.random() > 0.5 ? 1 : -1),
+            dy: -4,
+            color: '#4CAF50'
+        };
         
-        // Déplacement du joueur
-        function movePlayer() {
-            if (keys['ArrowLeft'] && playerX > 0) {
-                playerX -= 7;
-            }
-            if (keys['ArrowRight'] && playerX < gameContainer.offsetWidth - player.offsetWidth) {
-                playerX += 7;
-            }
-            player.style.left = playerX + 'px';
-        }
+        // Propriétés des briques
+        const brickRowCount = 5;
+        const brickColumnCount = 9;
+        const brickWidth = 75;
+        const brickHeight = 20;
+        const brickPadding = 4;
+        const brickOffsetTop = 40;
+        const brickOffsetLeft = 25;
         
-        // Création d'une étoile
-        function createStar() {
-            const star = document.createElement('div');
-            star.className = 'star';
-            
-            const x = Math.random() * (gameContainer.offsetWidth - 30);
-            star.style.left = x + 'px';
-            star.style.top = '-30px';
-            
-            gameContainer.appendChild(star);
-            
-            stars.push({
-                element: star,
-                x: x,
-                y: 0,
-                speed: gameSpeed + Math.random() * 1.5
-            });
-        }
+        const bricks = [];
+        const brickColors = ['#FF5252', '#FF4081', '#E040FB', '#7C4DFF', '#536DFE'];
         
-        // Mouvement des étoiles
-        function moveStars() {
-            for (let i = stars.length - 1; i >= 0; i--) {
-                const star = stars[i];
-                star.y += star.speed;
-                star.element.style.top = star.y + 'px';
+        for (let c = 0; c < brickColumnCount; c++) {
+            bricks[c] = [];
+            for (let r = 0; r < brickRowCount; r++) {
+                const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
+                const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
                 
-                // Vérifier si l'étoile est attrapée
-                if (star.y + 30 >= gameContainer.offsetHeight - 60 && 
-                    star.y <= gameContainer.offsetHeight - 20 &&
-                    star.x + 30 >= playerX && 
-                    star.x <= playerX + player.offsetWidth) {
-                    
-                    // Étoile attrapée
-                    gameContainer.removeChild(star.element);
-                    stars.splice(i, 1);
-                    score++;
-                    starsToNextLevel--;
-                    
-                    // Vérifier si le niveau doit augmenter
-                    if (starsToNextLevel <= 0) {
-                        levelUp();
-                    }
-                    
-                    updateUI();
-                    continue;
-                }
-                
-                // Vérifier si l'étoile est manquée
-                if (star.y > gameContainer.offsetHeight) {
-                    gameContainer.removeChild(star.element);
-                    stars.splice(i, 1);
-                    lives--;
-                    updateUI();
-                    
-                    // Vérifier si la partie est terminée
-                    if (lives <= 0) {
-                        gameOver();
+                bricks[c][r] = {
+                    x: brickX,
+                    y: brickY,
+                    status: 1,
+                    color: brickColors[r]
+                };
+            }
+        }
+        
+        // Dessiner la raquette
+        function drawPaddle() {
+            ctx.beginPath();
+            ctx.roundRect(paddle.x, paddle.y, paddle.width, paddle.height, 10);
+            ctx.fillStyle = paddle.color;
+            ctx.fill();
+            ctx.closePath();
+            
+            // Ajouter un effet de brillance
+            ctx.beginPath();
+            ctx.roundRect(paddle.x + 5, paddle.y + 3, paddle.width - 10, 5, 3);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.fill();
+            ctx.closePath();
+        }
+        
+        // Dessiner la balle
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = ball.color;
+            ctx.fill();
+            ctx.closePath();
+            
+            // Ajouter un effet de brillance
+            ctx.beginPath();
+            ctx.arc(ball.x - ball.radius/3, ball.y - ball.radius/3, ball.radius/3, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.fill();
+            ctx.closePath();
+        }
+        
+        // Dessiner les briques
+        function drawBricks() {
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    if (bricks[c][r].status === 1) {
+                        ctx.beginPath();
+                        ctx.roundRect(bricks[c][r].x, bricks[c][r].y, brickWidth, brickHeight, 5);
+                        ctx.fillStyle = bricks[c][r].color;
+                        ctx.fill();
+                        ctx.closePath();
+                        
+                        // Ajouter un effet d'ombre
+                        ctx.beginPath();
+                        ctx.roundRect(bricks[c][r].x + 2, bricks[c][r].y + 2, brickWidth - 4, 5, 3);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                        ctx.fill();
+                        ctx.closePath();
                     }
                 }
             }
         }
         
-        // Augmentation du niveau
-        function levelUp() {
-            level++;
-            gameSpeed += 0.5;
-            starsToNextLevel = 10;
+        // Dessiner les crédits et les vies
+        function drawGameInfo() {
+            creditsElement.textContent = gameCredits;
+            totalCreditsElement.textContent = totalCredits;
+        }
+        
+        // Mouvement de la raquette
+        function movePaddle() {
+            paddle.x += paddle.dx;
             
-            // Effet visuel pour le changement de niveau
-            gameContainer.style.boxShadow = '0 0 30px rgba(255, 204, 0, 0.8)';
-            setTimeout(() => {
-                gameContainer.style.boxShadow = '0 0 20px rgba(255, 204, 0, 0.3)';
-            }, 500);
+            // Empêcher la raquette de sortir du canvas
+            if (paddle.x < 0) {
+                paddle.x = 0;
+            } else if (paddle.x + paddle.width > canvas.width) {
+                paddle.x = canvas.width - paddle.width;
+            }
+        }
+        
+        // Mouvement de la balle
+        function moveBall() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+            
+            // Collision avec les murs (gauche/droite)
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                ball.dx *= -1;
+                playSound('wall');
+            }
+            
+            // Collision avec le mur (haut)
+            if (ball.y - ball.radius < 0) {
+                ball.dy *= -1;
+                playSound('wall');
+            }
+            
+            // Collision avec la raquette
+            if (
+                ball.y + ball.radius > paddle.y &&
+                ball.y - ball.radius < paddle.y + paddle.height &&
+                ball.x > paddle.x &&
+                ball.x < paddle.x + paddle.width
+            ) {
+                ball.dy = -Math.abs(ball.dy);
+                playSound('paddle');
+                
+                // Modifier la direction en fonction de l'endroit où la balle frappe la raquette
+                const hitPoint = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+                ball.dx = hitPoint * 6;
+            }
+            
+            // Collision avec le bas (game over immédiat)
+            if (ball.y + ball.radius > canvas.height) {
+                playSound('lifeLost');
+                gameOver();
+            }
+            
+            // Détection de collision avec les briques
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    const brick = bricks[c][r];
+                    if (brick.status === 1) {
+                        if (
+                            ball.x + ball.radius > brick.x &&
+                            ball.x - ball.radius < brick.x + brickWidth &&
+                            ball.y + ball.radius > brick.y &&
+                            ball.y - ball.radius < brick.y + brickHeight
+                        ) {
+                            ball.dy *= -1;
+                            brick.status = 0;
+                            gameCredits += 1; // 1 crédit par brique
+                            totalCredits += 1;
+                            localStorage.setItem('totalCredits', totalCredits);
+                            playSound('brick');
+                            
+                            // Effet visuel quand une brique est cassée
+                            createParticles(brick.x + brickWidth/2, brick.y + brickHeight/2, brick.color);
+                            
+                            // Vérifier s'il reste des briques
+                            if (gameCredits === brickRowCount * brickColumnCount) {
+                                gameWin();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Créer des particules pour l'effet visuel
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const particle = {
+                        x: x,
+                        y: y,
+                        radius: Math.random() * 3 + 1,
+                        color: color,
+                        speedX: (Math.random() - 0.5) * 4,
+                        speedY: (Math.random() - 0.5) * 4,
+                        life: 20
+                    };
+                    
+                    particles.push(particle);
+                }, i * 50);
+            }
+        }
+        
+        // Dessiner les particules
+        function drawParticles() {
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+                ctx.closePath();
+                
+                p.x += p.speedX;
+                p.y += p.speedY;
+                p.life--;
+                
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+        
+        let particles = [];
+        
+        // Jouer un son
+        function playSound(type) {
+            // Dans une vraie implémentation, on utiliserait des fichiers audio
+            // Pour cette démo, nous allons simplement simuler le son
+            console.log(`Playing sound: ${type}`);
+        }
+        
+        // Dessiner tous les éléments
+        function draw() {
+            // Effacer le canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Dessiner les éléments
+            drawBricks();
+            drawPaddle();
+            drawBall();
+            drawParticles();
+            
+            // Ajouter un effet de lumière
+            ctx.beginPath();
+            const gradient = ctx.createRadialGradient(
+                ball.x, ball.y, 0,
+                ball.x, ball.y, 50
+            );
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.closePath();
+        }
+        
+        // Mettre à jour le jeu
+        function update() {
+            if (!gamePaused) {
+                movePaddle();
+                moveBall();
+                draw();
+                drawGameInfo();
+            }
+            
+            if (gameRunning) {
+                animationId = requestAnimationFrame(update);
+            }
+        }
+        
+        // Démarrer le jeu
+        function startGame() {
+            if (!gameRunning) {
+                gameRunning = true;
+                gamePaused = false;
+                startBtn.textContent = "Reprendre";
+                update();
+            }
+        }
+        
+        // Pause du jeu
+        function pauseGame() {
+            gamePaused = !gamePaused;
+            pauseBtn.textContent = gamePaused ? "Reprendre" : "Pause";
+        }
+        
+        // Réinitialiser le jeu
+        function resetGame() {
+            gameCredits = 0;
+            resetBall();
+            resetBricks();
+            gamePaused = false;
+            startBtn.textContent = "Commencer";
+            pauseBtn.textContent = "Pause";
+            drawGameInfo();
+            
+            // Cacher l'écran de game over
+            gameOverElement.style.display = 'none';
+            gameOverElement.querySelector('h2').textContent = 'Game Over';
+        }
+        
+        // Réinitialiser la balle
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = paddle.y - ball.radius;
+            ball.dx = 4 * (Math.random() > 0.5 ? 1 : -1);
+            ball.dy = -4;
+        }
+        
+        // Réinitialiser les briques
+        function resetBricks() {
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    bricks[c][r].status = 1;
+                }
+            }
         }
         
         // Game over
         function gameOver() {
             gameRunning = false;
-            clearInterval(starInterval);
-            finalScoreElement.textContent = `Votre score: ${score}`;
-            gameOverScreen.style.display = 'flex';
+            cancelAnimationFrame(animationId);
+            finalCreditsElement.textContent = `Vos crédits: ${gameCredits} (Total: ${totalCredits})`;
+            gameOverElement.style.display = 'block';
         }
         
-        // Boucle de jeu
-        function gameLoop() {
-            if (!gameRunning || gamePaused) return;
+        // Victoire
+        function gameWin() {
+            gameRunning = false;
+            cancelAnimationFrame(animationId);
+            finalCreditsElement.textContent = `Félicitations! Crédits: ${gameCredits} (Total: ${totalCredits})`;
+            gameOverElement.querySelector('h2').textContent = 'Vous avez gagné !';
+            gameOverElement.style.display = 'block';
+        }
+        
+        // Ouvrir le modal de paiement
+        function openPaymentModal() {
+            currentCreditsElement.textContent = totalCredits;
             
-            movePlayer();
-            moveStars();
-            requestAnimationFrame(gameLoop);
+            // Mettre à jour le message selon les crédits disponibles
+            if (totalCredits < 10000) {
+                const needed = 10000 - totalCredits;
+                creditsInfoElement.innerHTML = `Vous avez <span id="current-credits">${totalCredits}</span> crédits. Il vous manque <span style="color: #FF8C00;">${needed}</span> crédits pour pouvoir retirer (10000 crédits = 50000 FCFA).`;
+                insufficientCreditsElement.style.display = 'block';
+            } else {
+                const amount = (totalCredits / 10000) * 50000;
+                creditsInfoElement.innerHTML = `Vous avez <span id="current-credits">${totalCredits}</span> crédits. Vous pouvez retirer <span style="color: #4CAF50;">${amount.toLocaleString()} FCFA</span> (10000 crédits = 50000 FCFA).`;
+                insufficientCreditsElement.style.display = 'none';
+            }
+            
+            // Cacher tous les formulaires
+            Object.values(paymentForms).forEach(form => {
+                form.style.display = 'none';
+            });
+            // Désélectionner toutes les options
+            paymentOptions.forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            paymentModal.style.display = 'flex';
         }
         
-        // Événements clavier
-        document.addEventListener('keydown', (e) => {
-            keys[e.key] = true;
-        });
+        // Fermer le modal de paiement
+        function closePaymentModal() {
+            paymentModal.style.display = 'none';
+            // Cacher tous les formulaires
+            Object.values(paymentForms).forEach(form => {
+                form.style.display = 'none';
+            });
+            // Désélectionner toutes les options
+            paymentOptions.forEach(option => {
+                option.classList.remove('active');
+            });
+        }
         
-        document.addEventListener('keyup', (e) => {
-            keys[e.key] = false;
-        });
-        
-        // Boutons de contrôle
-        startButton.addEventListener('click', () => {
-            if (!gameRunning) {
-                initGame();
-                gameRunning = true;
-                gamePaused = false;
-                gameOverScreen.style.display = 'none';
-                starInterval = setInterval(createStar, 1000);
-                gameLoop();
+        // Gérer la sélection d'une option de paiement
+        function selectPaymentMethod(method) {
+            // Cacher tous les formulaires
+            Object.values(paymentForms).forEach(form => {
+                form.style.display = 'none';
+            });
+            
+            // Afficher le formulaire correspondant
+            if (paymentForms[method]) {
+                paymentForms[method].style.display = 'block';
             }
-        });
+        }
         
-        pauseButton.addEventListener('click', () => {
-            if (gameRunning) {
-                gamePaused = !gamePaused;
-                pauseButton.textContent = gamePaused ? 'Reprendre' : 'Pause';
-                
-                if (!gamePaused) {
-                    gameLoop();
+        // Soumettre un formulaire de paiement
+        function submitPaymentForm(method) {
+            if (totalCredits < 10000) {
+                insufficientCreditsElement.style.display = 'block';
+                return false;
+            }
+            
+            // Ici, vous ajouteriez la logique de traitement du paiement
+            alert(`Paiement via ${method} en cours de traitement pour ${totalCredits} crédits.`);
+            
+            // Réinitialiser les crédits après paiement réussi
+            totalCredits = 0;
+            localStorage.setItem('totalCredits', totalCredits);
+            drawGameInfo();
+            closePaymentModal();
+            
+            return true;
+        }
+        
+        // Contrôles au clavier
+        function keyDownHandler(e) {
+            if (e.key === 'Right' || e.key === 'ArrowRight') {
+                paddle.dx = paddle.speed;
+            } else if (e.key === 'Left' || e.key === 'ArrowLeft') {
+                paddle.dx = -paddle.speed;
+            } else if (e.key === ' ' || e.key === 'Spacebar') {
+                if (!gameRunning) {
+                    startGame();
+                } else {
+                    pauseGame();
                 }
             }
+        }
+        
+        function keyUpHandler(e) {
+            if (e.key === 'Right' || e.key === 'ArrowRight' || e.key === 'Left' || e.key === 'ArrowLeft') {
+                paddle.dx = 0;
+            }
+        }
+        
+        // Contrôles à la souris
+        function mouseMoveHandler(e) {
+            if (!gamePaused && gameRunning) {
+                const relativeX = e.clientX - canvas.getBoundingClientRect().left;
+                if (relativeX > 0 && relativeX < canvas.width) {
+                    paddle.x = relativeX - paddle.width / 2;
+                }
+            }
+        }
+        
+        // Contrôles tactiles
+        function setupTouchControls() {
+            // Déplacement avec les boutons tactiles
+            leftBtn.addEventListener('touchstart', () => {
+                paddle.dx = -paddle.speed;
+            });
+            
+            leftBtn.addEventListener('touchend', () => {
+                paddle.dx = 0;
+            });
+            
+            rightBtn.addEventListener('touchstart', () => {
+                paddle.dx = paddle.speed;
+            });
+            
+            rightBtn.addEventListener('touchend', () => {
+                paddle.dx = 0;
+            });
+            
+            // Déplacement en glissant le doigt sur l'écran
+            let touchStartX = 0;
+            
+            canvas.addEventListener('touchstart', (e) => {
+                if (!gamePaused && gameRunning) {
+                    const touch = e.touches[0];
+                    touchStartX = touch.clientX;
+                    const relativeX = touch.clientX - canvas.getBoundingClientRect().left;
+                    if (relativeX > 0 && relativeX < canvas.width) {
+                        paddle.x = relativeX - paddle.width / 2;
+                    }
+                    e.preventDefault();
+                }
+            });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                if (!gamePaused && gameRunning) {
+                    const touch = e.touches[0];
+                    const relativeX = touch.clientX - canvas.getBoundingClientRect().left;
+                    if (relativeX > 0 && relativeX < canvas.width) {
+                        paddle.x = relativeX - paddle.width / 2;
+                    }
+                    e.preventDefault();
+                }
+            });
+            
+            // Empêcher le défilement de la page
+            document.body.addEventListener('touchmove', (e) => {
+                if (e.target === canvas || e.target === leftBtn || e.target === rightBtn) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        }
+        
+        // Événements
+        document.addEventListener('keydown', keyDownHandler);
+        document.addEventListener('keyup', keyUpHandler);
+        canvas.addEventListener('mousemove', mouseMoveHandler);
+        startBtn.addEventListener('click', startGame);
+        pauseBtn.addEventListener('click', pauseGame);
+        resetBtn.addEventListener('click', resetGame);
+        paymentBtn.addEventListener('click', openPaymentModal);
+        restartBtn.addEventListener('click', resetGame);
+        closePaymentBtn.addEventListener('click', closePaymentModal);
+        
+        // Gestion des options de paiement
+        paymentOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                // Vérifier si les crédits sont suffisants
+                if (totalCredits >= 10000) {
+                    // Désélectionner toutes les options
+                    paymentOptions.forEach(opt => opt.classList.remove('active'));
+                    // Sélectionner l'option cliquée
+                    option.classList.add('active');
+                    // Afficher le formulaire correspondant
+                    const method = option.getAttribute('data-method');
+                    selectPaymentMethod(method);
+                }
+            });
         });
         
-        restartButton.addEventListener('click', () => {
-            initGame();
-            gameRunning = true;
-            gamePaused = false;
-            gameOverScreen.style.display = 'none';
-            starInterval = setInterval(createStar, 1000);
-            gameLoop();
-        });
+        // Initialisation des contrôles tactiles
+        if (isTouchDevice) {
+            setupTouchControls();
+        }
         
-        // Initialiser le jeu au chargement
-        window.addEventListener('load', initGame);
+        // Initialisation
+        draw();
+        drawGameInfo();
+        
+        // Ajouter roundRect si non supporté
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+                if (width < 2 * radius) radius = width / 2;
+                if (height < 2 * radius) radius = height / 2;
+                this.beginPath();
+                this.moveTo(x + radius, y);
+                this.arcTo(x + width, y, x + width, y + height, radius);
+                this.arcTo(x + width, y + height, x, y + height, radius);
+                this.arcTo(x, y + height, x, y, radius);
+                this.arcTo(x, y, x + width, y, radius);
+                this.closePath();
+                return this;
+            };
+        }
     </script>
 </body>
 </html>
+        
+        
